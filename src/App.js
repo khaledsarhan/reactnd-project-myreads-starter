@@ -3,8 +3,6 @@ import * as BooksAPI from './BooksAPI'
 import './App.css'
 import BookShelf from './BookShelf.js'
 import AddBooks from './AddBooks.js'
-import escapeRegExp from 'escape-string-regexp'
-import sortBy from 'sort-by'
 import { Link } from 'react-router-dom'
 import { Route } from 'react-router-dom'
 import shelves from './shelves';
@@ -40,20 +38,16 @@ class BooksApp extends React.Component {
   }
 
   moveBook = (book, shelf) => {
-    BooksAPI.update(book, shelf).then(function (data) {
-      this.setState((prevState) => ({
-        books: this.updateBooks(book, shelf, prevState.books),
-      }))
-    });
-    //this.getAllBooks();
+    BooksAPI.update(book, shelf) // Update books shelf and sync it with the local book list.
+    this.setState((prevState) => ({
+      books: this.updateBooks(book, shelf, prevState.books),
+    }))
+    //this.getAllBooks(); // This can be used instead of updating the book list locally.
   }
 
   render() {
     return (
       <div className="app">
-        <Route exact path='/search' render={() => (
-          <AddBooks onBookMove={this.moveBook} queryVal={this.state.query} allBooks={this.state.books} />
-        )} />
         <Route exact path='/' render={() => (
           <div className="list-books">
             <div className="list-books-title">
@@ -62,7 +56,7 @@ class BooksApp extends React.Component {
             <div className="list-books-content">
               <div>
                 {shelves.map(shelf => (
-                  <BookShelf onBookMove={this.moveBook} shelfTitle={shelf.title} books={this.state.books.filter((b) => b.shelf == shelf.code)} />
+                  <BookShelf key={shelf.code} onBookMove={this.moveBook} shelfTitle={shelf.title} books={this.state.books.filter((b) => b.shelf == shelf.code)} />
                 ))}
               </div>
             </div>
@@ -71,6 +65,11 @@ class BooksApp extends React.Component {
             </div>
           </div>
         )} />
+
+        <Route exact path='/search' render={() => (
+          <AddBooks onBookMove={this.moveBook} queryVal={this.state.query} allBooks={this.state.books} />
+        )} />
+
       </div>
     )
   }

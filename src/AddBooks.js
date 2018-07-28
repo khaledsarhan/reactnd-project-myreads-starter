@@ -57,7 +57,7 @@ class AddBooks extends React.Component {
           <Link className='close-search' to='/'>Close</Link>
           <div className="search-books-input-wrapper">
 
-            <input type="text" placeholder="Search by title or author" value={this.state.queryVal} onChange={(event) => this.handleQueryChange(event.target.value)} />
+            <input type="text" placeholder="Search by title or author" value={this.state.query} onChange={(event) => this.handleQueryChange(event.target.value)} />
 
           </div>
         </div>
