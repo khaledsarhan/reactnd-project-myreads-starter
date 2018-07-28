@@ -5,21 +5,20 @@ import BookShelf from './BookShelf.js'
 import AddBooks from './AddBooks.js'
 import escapeRegExp from 'escape-string-regexp'
 import sortBy from 'sort-by'
+import { Link } from 'react-router-dom'
+import { Route } from 'react-router-dom'
+import shelves from './shelves';
 
 class BooksApp extends React.Component {
   state = {
-    books: [],
-    searchedBooks: [],
-    /**
-     * TODO: Instead of using this state variable to keep track of which page
-     * we're on, use the URL in the browser's address bar. This will ensure that
-     * users can use the browser's back and forward buttons to navigate between
-     * pages, as well as provide a good URL they can bookmark and share.
-     */
-    showSearchPage: false
+    books: []
   }
 
   componentDidMount() {
+    this.getAllBooks()
+  }
+
+  getAllBooks = () => {
     BooksAPI.getAll().then((books) => {
       this.setState({ books });
     })
@@ -27,65 +26,51 @@ class BooksApp extends React.Component {
 
   /*
     - Update the shelf of the book which is selected from the main or the search page.
+    - Add book if it's not exist in the current book list
+    - Doing this will enhance the performance of the app rather than getting the data again from the server!!
   */
   updateBooks = (book, shelf, bookArr) => {
-    return bookArr.map(element => {
-      if (element.id == book.id) {
-        element.shelf = shelf;
-      }
-      return element;
-    });
+    let bookIndex = bookArr.findIndex(item => item.id == book.id);
+    if (bookIndex < 0) {
+      bookArr.push(book);
+      bookIndex = bookArr.length - 1;
+    }
+    bookArr[bookIndex].shelf = shelf;
+    return bookArr;
   }
 
   moveBook = (book, shelf) => {
-    this.setState((prevState) => ({
-      books: this.updateBooks(book, shelf, prevState.books),
-      searchedBooks: this.updateBooks(book, shelf, prevState.searchedBooks)
-    }))
-    BooksAPI.update(book, shelf);
-  }
-
-  /*
-    - Search the book and get the result then update the state.
-    - Check from the search book result with the books which already on tha main page.
-    - Update the book from the search page with the correct shelf from the main page.
-  */
-  search = (query) => {
-    BooksAPI.search(query).then((searchedBooks) => {
+    BooksAPI.update(book, shelf).then(function (data) {
       this.setState((prevState) => ({
-        searchedBooks: searchedBooks.map(bookElement => {
-          let shelfBookIndex = prevState.books.findIndex(item => item.id == bookElement.id);
-          if (shelfBookIndex >= 0) {
-            bookElement.shelf = prevState.books[shelfBookIndex].shelf;
-          }
-          return bookElement;
-        })
-      }));
-    })
+        books: this.updateBooks(book, shelf, prevState.books),
+      }))
+    });
+    //this.getAllBooks();
   }
 
   render() {
     return (
       <div className="app">
-        {this.state.showSearchPage ? (
-          <AddBooks onBookMove={this.moveBook} books={this.state.searchedBooks} onSearchQueryChange={this.search} />
-        ) : (
-            <div className="list-books">
-              <div className="list-books-title">
-                <h1>MyReads</h1>
-              </div>
-              <div className="list-books-content">
-                <div>
-                  <BookShelf onBookMove={this.moveBook} shelfTitle='Currently Reading' books={this.state.books.filter((b) => b.shelf == 'currentlyReading')} />
-                  <BookShelf onBookMove={this.moveBook} shelfTitle='Want to Read' books={this.state.books.filter((b) => b.shelf == 'wantToRead')} />
-                  <BookShelf onBookMove={this.moveBook} shelfTitle='Read' books={this.state.books.filter((b) => b.shelf == 'read')} />
-                </div>
-              </div>
-              <div className="open-search">
-                <a onClick={() => this.setState({ showSearchPage: true })}>Add a book</a>
+        <Route exact path='/search' render={() => (
+          <AddBooks onBookMove={this.moveBook} queryVal={this.state.query} allBooks={this.state.books} />
+        )} />
+        <Route exact path='/' render={() => (
+          <div className="list-books">
+            <div className="list-books-title">
+              <h1>MyReads</h1>
+            </div>
+            <div className="list-books-content">
+              <div>
+                {shelves.map(shelf => (
+                  <BookShelf onBookMove={this.moveBook} shelfTitle={shelf.title} books={this.state.books.filter((b) => b.shelf == shelf.code)} />
+                ))}
               </div>
             </div>
-          )}
+            <div className="open-search">
+              <Link to='/search'>Add a book</Link>
+            </div>
+          </div>
+        )} />
       </div>
     )
   }

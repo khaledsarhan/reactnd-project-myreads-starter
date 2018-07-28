@@ -1,5 +1,6 @@
 import React from 'react'
 import './App.css'
+import shelves from './shelves';
 
 class BookShelf extends React.Component {
     render() {
@@ -13,19 +14,19 @@ class BookShelf extends React.Component {
                                 <li key={book.id}>
                                     <div className="book">
                                         <div className="book-top">
-                                            <div className="book-cover" style={{ width: 128, height: 193, backgroundImage: 'url("' + book.imageLinks.thumbnail + '")' }}></div>
+                                            {book.imageLinks && <div className="book-cover" style={{ width: 128, height: 193, backgroundImage: 'url("' + book.imageLinks.thumbnail + '")' }}></div>}
                                             <div className="book-shelf-changer">
-                                                <select value={book.shelf? book.shelf : 'none'} onChange={(target) => this.props.onBookMove(book, target.currentTarget.value)}>
+                                                <select className="option-selected" value={book.shelf ? book.shelf : 'none'} onChange={(target) => this.props.onBookMove(book, target.currentTarget.value)}>
                                                     <option value="move" disabled>Move to...</option>
-                                                    <option value="currentlyReading">Currently Reading</option>
-                                                    <option value="wantToRead">Want to Read</option>
-                                                    <option value="read">Read</option>
+                                                    {shelves.map(shelf => (
+                                                        <option key={shelf.code} value={shelf.code}>{shelf.title}</option>
+                                                    ))}
                                                     <option value="none">None</option>
                                                 </select>
                                             </div>
                                         </div>
                                         <div className="book-title">{book.title}</div>
-                                        {book.authors.map((author, index) => (
+                                        {(book.authors && book.authors.length > 0) && book.authors.map((author, index) => (
                                             <div className="book-authors" key={index}>{author}</div>
                                         ))}
                                     </div>
